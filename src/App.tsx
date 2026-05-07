@@ -24,6 +24,7 @@ const DEFAULT_DATA: ProductionData = {
   bQty: '40',
   bNo: '1',
   bSl: '1-40',
+  slNo: '01',
   startBSl: '1'
 };
 
@@ -501,14 +502,25 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">I. Color</label>
-                <input 
-                  name="iColour"
-                  value={specData.iColour}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-zinc-200 rounded focus:border-black focus:ring-0 transition-all text-sm font-medium" 
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">I. Color</label>
+                  <input 
+                    name="iColour"
+                    value={specData.iColour}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-zinc-200 rounded focus:border-black focus:ring-0 transition-all text-sm font-medium" 
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">SL No.</label>
+                  <input 
+                    name="slNo"
+                    value={specData.slNo}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-zinc-200 rounded focus:border-black focus:ring-0 transition-all text-sm font-medium" 
+                  />
+                </div>
               </div>
 
 
@@ -559,6 +571,7 @@ export default function App() {
                         <option value="gColour">G. Color</option>
                         <option value="bSl">B SL</option>
                         <option value="iColour">I. Color</option>
+                        <option value="slNo">SL No</option>
                         <option value="footer">Bundle Card Header (Footer)</option>
                       </select>
                       <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" size={16} />

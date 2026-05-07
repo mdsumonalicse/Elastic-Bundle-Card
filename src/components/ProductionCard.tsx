@@ -89,7 +89,7 @@ export const ProductionCard: React.FC<ProductionCardProps> = ({ data, styleConfi
       <>
         <div className="font-bold whitespace-nowrap" style={{ fontSize: `${labelSize}px` }}>{labelText}</div>
         <div className="font-bold" style={{ fontSize: `${labelSize}px` }}>:</div>
-        <div className={`uppercase tracking-tight font-bold self-end pb-0.5 ${fieldKey === 'iColour' ? 'col-span-4' : ''}`}>
+        <div className="uppercase tracking-tight font-bold">
           <AutoShrink 
             text={data[fieldKey]} 
             fontSize={fontSize} 
@@ -107,7 +107,7 @@ export const ProductionCard: React.FC<ProductionCardProps> = ({ data, styleConfi
       id="production-card"
     >
       <div 
-        className="grid grid-cols-[max-content_min-content_1fr_max-content_min-content_auto] gap-x-1 gap-y-1.5 items-center"
+        className="grid grid-cols-[max-content_min-content_1fr_max-content_min-content_auto] gap-x-1 gap-y-1.5 items-baseline"
         style={{ transform: `translateX(${xOffset}px)` }}
       >
         {renderField('buyer')}
@@ -123,6 +123,7 @@ export const ProductionCard: React.FC<ProductionCardProps> = ({ data, styleConfi
         {renderField('bSl')}
 
         {renderField('iColour')}
+        {renderField('slNo')}
       </div>
 
       {/* Subtle branding text at the bottom right */}

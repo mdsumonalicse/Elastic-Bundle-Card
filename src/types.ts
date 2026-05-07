@@ -8,6 +8,7 @@ export interface ProductionData {
   gColour: string;
   bSl: string;
   iColour: string;
+  slNo: string;
   startBSl?: string;
 }
 
@@ -43,6 +44,7 @@ export const defaultLabelStyle: LabelStyle = {
     gColour: { textAlign: 'left', letterSpacing: 0 },
     bSl: { textAlign: 'left', letterSpacing: 0 },
     iColour: { textAlign: 'left', letterSpacing: 0 },
+    slNo: { textAlign: 'left', letterSpacing: 0 },
     footer: { textAlign: 'right', letterSpacing: 0, fontSize: 5 }
   },
   fieldLabels: {
@@ -54,7 +56,8 @@ export const defaultLabelStyle: LabelStyle = {
     bNo: 'B No',
     gColour: 'S. Color',
     bSl: 'B SL',
-    iColour: 'Color'
+    iColour: 'Color',
+    slNo: 'SL No'
   },
   bundleCardLabel: 'Elastic Bundle Card'
 };
@@ -69,4 +72,5 @@ export const defaultProductionData: ProductionData = {
   gColour: "VAR-AZZVRO.CHIARO",
   bSl: "1-40",
   iColour: "VAR-AZZVRO.CHIARO",
+  slNo: "01",
 };
