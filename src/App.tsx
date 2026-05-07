@@ -153,7 +153,7 @@ export default function App() {
   // Firestore Data Listener
   useEffect(() => {
     const reportsRef = collection(db, 'reports');
-    const q = query(reportsRef, where('ownerId', '==', guestId));
+    const q = query(reportsRef);
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const loadedReports = snapshot.docs.map(doc => ({
@@ -170,7 +170,7 @@ export default function App() {
     });
 
     return () => unsubscribe();
-  }, [guestId]);
+  }, []);
 
   const handleSaveReport = async () => {
     try {
