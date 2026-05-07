@@ -1,0 +1,38 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Primitive Helpers
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // Validation Blueprints
+    function isValidReport(data) {
+      return data.keys().hasAll(['id', 'timestamp', 'buyer', 'size', 'style', 'refNo', 'bQty', 'bNo', 'gColour', 'bSl', 'iColour', 'slNo', 'ownerId'])
+        && data.keys().size() <= 20
+        && data.id is string
+        && data.timestamp is number
+        && data.buyer is string
+        && data.style is string
+        && data.ownerId is string;
+    }
+
+    match /reports/{reportId} {
+      allow get: if true;
+      allow list: if true;
+      
+      allow create: if isValidId(reportId)
+        && isValidReport(incoming());
+        
+      allow update: if isValidReport(incoming())
+        && incoming().ownerId == existing().ownerId; // Immortal field
+        
+      allow delete: if true;
+    }
+  }
+}

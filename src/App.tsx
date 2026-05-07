@@ -5,9 +5,22 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Printer, Settings2, FileText, ChevronDown, Plus, X } from 'lucide-react';
+import { Printer, Settings2, FileText, ChevronDown, Plus, X, Search, Save, List, Trash2, History, User as UserIcon } from 'lucide-react';
 import { ProductionCard } from './components/ProductionCard';
-import { ProductionData, LabelStyle, defaultLabelStyle, FieldStyle } from './types';
+import { ProductionData, LabelStyle, defaultLabelStyle, FieldStyle, SavedReport } from './types';
+import { 
+  db, 
+  handleFirestoreError, 
+  OperationType, 
+  collection, 
+  setDoc, 
+  query, 
+  where, 
+  onSnapshot, 
+  deleteDoc, 
+  doc, 
+  getGuestId
+} from './lib/firebase';
 
 const INITIAL_BUYERS = [
   'Calliope', 'Kesko', 'O/Marines', 'US Polo', 'George', 'Gildan', 'Zizzi', 
@@ -128,6 +141,89 @@ export default function App() {
   });
 
   const [isExporting, setIsExporting] = useState(false);
+  const [showReports, setShowReports] = useState(false);
+  const [reports, setReports] = useState<SavedReport[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isDataLoading, setIsDataLoading] = useState(true);
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const guestId = getGuestId();
+
+  // Firestore Data Listener
+  useEffect(() => {
+    const reportsRef = collection(db, 'reports');
+    const q = query(reportsRef, where('ownerId', '==', guestId));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const loadedReports = snapshot.docs.map(doc => ({
+        ...doc.data(),
+        id: doc.id
+      })) as SavedReport[];
+      
+      // Sort by timestamp descending
+      setReports(loadedReports.sort((a, b) => b.timestamp - a.timestamp));
+      setIsDataLoading(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'reports');
+      setIsDataLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [guestId]);
+
+  const handleSaveReport = async () => {
+    try {
+      setSaveError(null);
+      const reportsRef = collection(db, 'reports');
+      const newId = crypto.randomUUID();
+      const reportDocRef = doc(db, 'reports', newId);
+      
+      const newReport: SavedReport = {
+        ...specData,
+        id: newId,
+        ownerId: guestId,
+        timestamp: Date.now()
+      };
+      
+      await setDoc(reportDocRef, newReport);
+      setShowSaveSuccess(true);
+      setTimeout(() => setShowSaveSuccess(false), 3000);
+    } catch (error) {
+      console.error('Save failed:', error);
+      setSaveError(error instanceof Error ? error.message : 'Unknown error');
+      setTimeout(() => setSaveError(null), 5000);
+      handleFirestoreError(error, OperationType.CREATE, 'reports');
+    }
+  };
+
+  const handleDeleteReport = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm('Are you sure you want to delete this report from the cloud?')) return;
+
+    try {
+      const reportDocRef = doc(db, 'reports', id);
+      await deleteDoc(reportDocRef);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `reports/${id}`);
+    }
+  };
+
+  const loadReport = (report: SavedReport) => {
+    // We only want to load the production data part
+    const { id, timestamp, ...data } = report;
+    setSpecData(data);
+    setShowReports(false);
+  };
+
+  const filteredReports = reports.filter(report => {
+    const query = searchQuery.toLowerCase();
+    return (
+      report.style.toLowerCase().includes(query) ||
+      report.refNo.toLowerCase().includes(query) ||
+      report.slNo.toLowerCase().includes(query)
+    );
+  });
 
   const handlePrint = () => {
     try {
@@ -321,7 +417,7 @@ export default function App() {
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-zinc-100">
       {/* Sidebar: Inputs */}
-      <div className="w-full lg:w-[380px] bg-white border-r border-zinc-200 p-5 lg:h-screen lg:fixed lg:top-0 lg:left-0 no-print flex flex-col shadow-xl z-20">
+      <div className="w-full lg:w-[480px] bg-white border-r border-zinc-200 p-5 lg:h-screen lg:fixed lg:top-0 lg:left-0 no-print flex flex-col shadow-xl z-20">
         <div className="flex items-center justify-between gap-2 mb-4 shrink-0">
           <div className="flex items-center gap-2">
             <div className="bg-black p-1.5 rounded text-white">
@@ -329,17 +425,36 @@ export default function App() {
             </div>
             <h1 className="font-bold text-lg tracking-tight uppercase leading-tight">Elastic Bundle Card Generate</h1>
           </div>
-          <button 
-            onClick={() => setShowSettings(!showSettings)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${
-              showSettings 
-                ? 'bg-black text-white' 
-                : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-            }`}
-          >
-            <Settings2 size={12} />
-            {showSettings ? 'Close Settings' : 'Settings'}
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button 
+              onClick={() => {
+                setShowReports(!showReports);
+                if (showSettings) setShowSettings(false);
+              }}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${
+                showReports 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+              }`}
+            >
+              <History size={12} />
+              {showReports ? 'Close Reports' : 'Reports'}
+            </button>
+            <button 
+              onClick={() => {
+                setShowSettings(!showSettings);
+                if (showReports) setShowReports(false);
+              }}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${
+                showSettings 
+                  ? 'bg-black text-white' 
+                  : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+              }`}
+            >
+              <Settings2 size={12} />
+              {showSettings ? 'Close' : 'Settings'}
+            </button>
+          </div>
         </div>
 
         {/* Action Buttons at Top */}
@@ -368,7 +483,7 @@ export default function App() {
         </div>
 
         <div className="flex-1 overflow-y-auto space-y-5 pr-1 custom-scrollbar">
-          {!showSettings ? (
+          {!showSettings && !showReports ? (
             <motion.div 
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -539,6 +654,98 @@ export default function App() {
                   </div>
                 </div>
               </div>
+
+              <div className="space-y-1.5 pt-2 border-t border-zinc-100">
+                <button 
+                  onClick={handleSaveReport}
+                  className="w-full py-3 rounded flex items-center justify-center gap-2 font-bold transition-all active:scale-[0.98] text-[11px] uppercase tracking-wider shadow-md bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  <Save size={16} />
+                  Save to Report
+                </button>
+              </div>
+            </motion.div>
+          ) : showReports ? (
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-4"
+            >
+              {isDataLoading ? (
+                <div className="flex flex-col items-center justify-center py-20">
+                  <div className="w-8 h-8 border-3 border-blue-600/20 border-t-blue-600 rounded-full animate-spin mb-4" />
+                  <p className="text-zinc-400 text-xs font-bold uppercase tracking-widest">Loading Reports...</p>
+                </div>
+              ) : (
+                <>
+                  <div className="sticky top-0 z-10 bg-white pb-2">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
+                      <input 
+                        type="text"
+                        placeholder="Search Style, Ref or SL No..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 bg-zinc-50 border border-zinc-200 rounded-lg text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    {filteredReports.length > 0 ? (
+                      filteredReports.map(report => (
+                        <div 
+                          key={report.id}
+                          onClick={() => loadReport(report)}
+                          className="group p-3 bg-white border border-zinc-200 rounded-lg hover:border-blue-500 hover:shadow-md cursor-pointer transition-all relative"
+                        >
+                          <button 
+                            onClick={(e) => handleDeleteReport(report.id, e)}
+                            className="absolute top-2 right-2 p-1.5 text-zinc-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                          
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="text-[10px] font-bold text-blue-600 uppercase bg-blue-50 px-1.5 py-0.5 rounded">
+                              {report.buyer}
+                            </span>
+                            <span className="text-[9px] text-zinc-400 font-mono">
+                              {new Date(report.timestamp).toLocaleDateString()}
+                            </span>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-x-2 gap-y-0.5">
+                            <div>
+                              <div className="text-[8px] uppercase text-zinc-400 font-bold leading-none">Style</div>
+                              <div className="text-[11px] font-bold text-zinc-800 truncate">{report.style}</div>
+                            </div>
+                            <div>
+                              <div className="text-[8px] uppercase text-zinc-400 font-bold leading-none">Ref No</div>
+                              <div className="text-[11px] font-bold text-zinc-800 truncate">{report.refNo}</div>
+                            </div>
+                            <div>
+                              <div className="text-[8px] uppercase text-zinc-400 font-bold leading-none">SL No</div>
+                              <div className="text-[11px] font-bold text-zinc-800">{report.slNo}</div>
+                            </div>
+                            <div>
+                              <div className="text-[8px] uppercase text-zinc-400 font-bold leading-none">Size</div>
+                              <div className="text-[11px] font-bold text-zinc-800">{report.size}</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-10">
+                        <div className="bg-zinc-50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <Search size={20} className="text-zinc-300" />
+                        </div>
+                        <p className="text-zinc-500 text-sm">No reports found</p>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </motion.div>
           ) : (
             <motion.div 
@@ -702,7 +909,38 @@ export default function App() {
       </div>
 
       {/* Main Content: Preview */}
-      <div className="flex-1 bg-zinc-100 p-8 lg:h-screen lg:overflow-y-auto preview-scroll relative lg:ml-[380px]">
+      <div className="flex-1 bg-zinc-100 p-8 lg:h-screen lg:overflow-y-auto preview-scroll relative lg:ml-[480px]">
+        {/* Notifications */}
+        {showSaveSuccess && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: -20, x: '-50%' }}
+            className="fixed top-6 left-1/2 z-50 bg-green-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 font-bold uppercase tracking-wider text-[11px]"
+            style={{ left: '50%', translateX: '-50%' }}
+          >
+            <div className="bg-white/20 p-1 rounded-full">
+              <Plus size={14} className="rotate-45" />
+            </div>
+            Report Saved Successfully!
+          </motion.div>
+        )}
+
+        {saveError && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: -20, x: '-50%' }}
+            className="fixed top-6 left-1/2 z-50 bg-red-600 text-white px-6 py-3 rounded-lg shadow-2xl flex items-center gap-3 font-bold uppercase tracking-wider text-[11px] max-w-md text-center"
+            style={{ left: '50%', translateX: '-50%' }}
+          >
+            <div className="bg-white/20 p-1 rounded-full">
+              <X size={14} />
+            </div>
+            Save Failed: {saveError}
+          </motion.div>
+        )}
+
         <div className="mx-auto min-h-full print-area">
           <div className="flex items-center justify-between mb-8 pb-4 border-b border-zinc-200 no-print max-w-[210mm] mx-auto">
             <div className="flex items-center gap-2 text-zinc-400">

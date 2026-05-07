@@ -1,0 +1,32 @@
+{
+  "entities": {
+    "report": {
+      "title": "Saved Report",
+      "description": "A saved production card report with full metadata",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "timestamp": { "type": "number" },
+        "buyer": { "type": "string" },
+        "size": { "type": "string" },
+        "style": { "type": "string" },
+        "refNo": { "type": "string" },
+        "bQty": { "type": "string" },
+        "bNo": { "type": "string" },
+        "gColour": { "type": "string" },
+        "bSl": { "type": "string" },
+        "iColour": { "type": "string" },
+        "slNo": { "type": "string" },
+        "startBSl": { "type": "string" },
+        "ownerId": { "type": "string" }
+      },
+      "required": ["id", "timestamp", "buyer", "style", "ownerId"]
+    }
+  },
+  "firestore": {
+    "/reports/{reportId}": {
+      "schema": "report",
+      "description": "Collection of user-saved reports"
+    }
+  }
+}

@@ -1,3 +1,9 @@
+export interface SavedReport extends ProductionData {
+  id: string;
+  timestamp: number;
+  ownerId: string;
+}
+
 export interface ProductionData {
   buyer: string;
   size: string;
