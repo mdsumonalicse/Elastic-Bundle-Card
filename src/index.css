@@ -67,7 +67,7 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 5mm;
+    margin: 0;
   }
 
   .no-print {
@@ -90,66 +90,6 @@
     background: white !important;
     display: block !important;
   }
-
-  .page-container {
-    page-break-after: always !important;
-    break-after: page !important;
-    padding: 2.5mm 5mm !important;
-    box-sizing: border-box !important;
-    width: 210mm !important;
-    height: 297mm !important;
-    margin: 0 auto !important;
-    background: white !important;
-    position: relative !important;
-  }
- 
-  .grid-container {
-    display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
-    grid-template-rows: repeat(7, 1fr) !important;
-    column-gap: 5mm !important;
-    row-gap: 5mm !important;
-    margin: 0 auto !important;
-    width: 200mm !important;
-    height: 292mm !important;
-  }
- 
-  #production-card {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    width: 100% !important;
-    height: 100% !important;
-    border: 2px solid black !important;
-    margin: 0 auto !important;
-    box-sizing: border-box !important;
-    padding: 1.5mm !important;
-  }
-}
-
-/* Screen Preview Styles */
-.page-preview {
-  width: 210mm;
-  height: 297mm;
-  background: white;
-  margin: 0 auto 40px auto;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-  padding: 2.5mm 5mm;
-  box-sizing: border-box;
-  position: relative;
-}
-
-.grid-preview {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(7, 1fr);
-  column-gap: 5mm;
-  row-gap: 5mm;
-  width: 200mm;
-  height: 292mm;
-  margin: 0 auto;
 }
 
 /* Extra container for PDF generation simulation */

@@ -287,17 +287,20 @@ export default function App() {
                 background: white !important;
                 page-break-after: always !important;
                 position: relative !important;
+                overflow: hidden !important;
               }
               
               .grid-container {
                 display: grid !important;
-                grid-template-columns: repeat(${styleConfig.gridColumns}, 1fr) !important;
-                grid-template-rows: repeat(${styleConfig.gridRows}, 1fr) !important;
+                grid-template-columns: ${styleConfig.cardWidth ? `repeat(${styleConfig.gridColumns}, ${styleConfig.cardWidth}mm)` : `repeat(${styleConfig.gridColumns}, 1fr)`} !important;
+                grid-template-rows: ${styleConfig.cardHeight ? `repeat(${styleConfig.gridRows}, ${styleConfig.cardHeight}mm)` : `repeat(${styleConfig.gridRows}, 1fr)`} !important;
                 width: 100% !important;
                 height: 100% !important;
                 column-gap: ${styleConfig.columnGap}mm !important;
                 row-gap: ${styleConfig.rowGap}mm !important;
                 margin: 0 auto !important;
+                align-content: start !important;
+                justify-content: start !important;
               }
               
               [id="production-card"] {
@@ -374,10 +377,12 @@ export default function App() {
           className="grid-container w-full h-full"
           style={{
             display: 'grid',
-            gridTemplateColumns: `repeat(${styleConfig.gridColumns}, 1fr)`,
-            gridTemplateRows: `repeat(${styleConfig.gridRows}, 1fr)`,
+            gridTemplateColumns: styleConfig.cardWidth ? `repeat(${styleConfig.gridColumns}, ${styleConfig.cardWidth}mm)` : `repeat(${styleConfig.gridColumns}, 1fr)`,
+            gridTemplateRows: styleConfig.cardHeight ? `repeat(${styleConfig.gridRows}, ${styleConfig.cardHeight}mm)` : `repeat(${styleConfig.gridRows}, 1fr)`,
             columnGap: `${styleConfig.columnGap}mm`,
-            rowGap: `${styleConfig.rowGap}mm`
+            rowGap: `${styleConfig.rowGap}mm`,
+            alignContent: 'start',
+            justifyContent: 'start'
           }}
         >
           {page.map((labelData, labelIdx) => {
@@ -452,6 +457,54 @@ export default function App() {
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-zinc-100">
+      <style>{`
+        @media print {
+          @page {
+            size: A4 portrait !important;
+            margin: 0 !important;
+          }
+          body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+          .page-container {
+            width: 210mm !important;
+            height: 297mm !important;
+            padding: ${styleConfig.pagePadding}mm !important;
+            box-sizing: border-box !important;
+            background: #ffffff !important;
+            page-break-after: always !important;
+            break-after: page !important;
+            position: relative !important;
+            margin: 0 !important;
+            overflow: hidden !important;
+          }
+          .grid-container {
+            display: grid !important;
+            grid-template-columns: ${styleConfig.cardWidth ? `repeat(${styleConfig.gridColumns}, ${styleConfig.cardWidth}mm)` : `repeat(${styleConfig.gridColumns}, 1fr)`} !important;
+            grid-template-rows: ${styleConfig.cardHeight ? `repeat(${styleConfig.gridRows}, ${styleConfig.cardHeight}mm)` : `repeat(${styleConfig.gridRows}, 1fr)`} !important;
+            width: 100% !important;
+            height: 100% !important;
+            column-gap: ${styleConfig.columnGap}mm !important;
+            row-gap: ${styleConfig.rowGap}mm !important;
+            margin: 0 !important;
+            align-content: start !important;
+            justify-content: start !important;
+          }
+          [id="production-card"] {
+            width: ${styleConfig.cardWidth ? `${styleConfig.cardWidth}mm` : '100%'} !important;
+            height: ${styleConfig.cardHeight ? `${styleConfig.cardHeight}mm` : '100%'} !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            box-sizing: border-box !important;
+            border: 2px solid #000000 !important;
+          }
+        }
+      `}</style>
       {/* Sidebar: Inputs */}
       <div className="w-full lg:w-[480px] bg-white border-r border-zinc-200 p-5 lg:h-screen lg:fixed lg:top-0 lg:left-0 no-print flex flex-col shadow-xl z-20">
         <div className="flex items-center justify-between gap-2 mb-4 shrink-0">
