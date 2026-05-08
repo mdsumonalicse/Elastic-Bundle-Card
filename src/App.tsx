@@ -282,7 +282,7 @@ export default function App() {
               .page-container {
                 width: 210mm !important;
                 height: 297mm !important;
-                padding: 2.5mm 5mm !important;
+                padding: ${styleConfig.pagePadding}mm !important;
                 box-sizing: border-box !important;
                 background: white !important;
                 page-break-after: always !important;
@@ -291,29 +291,32 @@ export default function App() {
               
               .grid-container {
                 display: grid !important;
-                grid-template-columns: repeat(3, 1fr) !important;
-                grid-template-rows: repeat(7, 1fr) !important;
-                width: 200mm !important;
-                height: 292mm !important;
-                column-gap: 5mm !important;
-                row-gap: 5mm !important;
+                grid-template-columns: repeat(${styleConfig.gridColumns}, 1fr) !important;
+                grid-template-rows: repeat(${styleConfig.gridRows}, 1fr) !important;
+                width: 100% !important;
+                height: 100% !important;
+                column-gap: ${styleConfig.columnGap}mm !important;
+                row-gap: ${styleConfig.rowGap}mm !important;
                 margin: 0 auto !important;
               }
               
               [id="production-card"] {
-                width: 100% !important;
-                height: 100% !important;
+                width: ${styleConfig.cardWidth ? `${styleConfig.cardWidth}mm` : '100%'} !important;
+                height: ${styleConfig.cardHeight ? `${styleConfig.cardHeight}mm` : '100%'} !important;
                 display: flex !important;
                 flex-direction: column !important;
                 justify-content: center !important;
                 border: 2px solid #000000 !important;
                 box-sizing: border-box !important;
-                padding: 1.5mm !important;
+                padding: ${styleConfig.cardPadding}mm !important;
                 color: #000000 !important;
                 background: #ffffff !important;
                 font-family: ui-sans-serif, system-ui, -apple-system, sans-serif !important;
                 page-break-inside: avoid !important;
-                line-height: 1.2 !important;
+              }
+              
+              [id="production-card"] > div:first-child {
+                row-gap: ${styleConfig.lineSpacing}mm !important;
               }
               
               .font-bold { font-weight: 700 !important; }
@@ -349,7 +352,7 @@ export default function App() {
   };
 
   const renderPages = () => {
-    const itemsPerSheet = 21; 
+    const itemsPerSheet = styleConfig.gridColumns * styleConfig.gridRows; 
     const pages = [];
     
     for (let i = 0; i < labels.length; i += itemsPerSheet) {
@@ -357,11 +360,44 @@ export default function App() {
     }
 
     return pages.map((page, pageIdx) => (
-      <div key={pageIdx} className="page-container page-preview print:mb-0 print:break-after-page">
-        <div className="grid-container grid-preview">
-          {page.map((labelData, labelIdx) => (
-            <ProductionCard key={labelIdx} data={labelData} styleConfig={styleConfig} />
-          ))}
+      <div 
+        key={pageIdx} 
+        className="page-container print:mb-0 print:break-after-page shadow-2xl mb-12 bg-white"
+        style={{
+          width: '210mm',
+          height: '297mm',
+          padding: `${styleConfig.pagePadding}mm`,
+          boxSizing: 'border-box'
+        }}
+      >
+        <div 
+          className="grid-container w-full h-full"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: `repeat(${styleConfig.gridColumns}, 1fr)`,
+            gridTemplateRows: `repeat(${styleConfig.gridRows}, 1fr)`,
+            columnGap: `${styleConfig.columnGap}mm`,
+            rowGap: `${styleConfig.rowGap}mm`
+          }}
+        >
+          {page.map((labelData, labelIdx) => {
+            const colIdx = labelIdx % styleConfig.gridColumns;
+            let offset = 0;
+            if (colIdx === 0) {
+              offset = styleConfig.leftColumnOffset;
+            } else if (colIdx === styleConfig.gridColumns - 1) {
+              offset = styleConfig.rightColumnOffset;
+            }
+
+            return (
+              <ProductionCard 
+                key={labelIdx} 
+                data={labelData} 
+                styleConfig={styleConfig} 
+                hOffset={offset} 
+              />
+            );
+          })}
         </div>
         {/* html2pdf specific page break marker */}
         {pageIdx < pages.length - 1 && <div className="html2pdf__page-break" style={{ height: '0', pageBreakAfter: 'always' }} />}
@@ -854,6 +890,129 @@ export default function App() {
                       onChange={(e) => setStyleConfig(prev => ({ ...prev, contentXOffset: parseInt(e.target.value) }))}
                       className="w-full accent-black h-1.5 bg-zinc-100 rounded-lg appearance-none cursor-pointer"
                     />
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-4 border-t border-zinc-100">
+                  <label className="text-[10px] font-bold uppercase text-zinc-600 tracking-wider flex items-center gap-1.5 mb-2">
+                    <Settings2 size={12} />
+                    Grid & Layout Settings
+                  </label>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-bold uppercase text-zinc-400">Grid Cols ({styleConfig.gridColumns})</label>
+                      <input 
+                        type="number" min="1" max="10"
+                        value={styleConfig.gridColumns}
+                        onChange={(e) => setStyleConfig(prev => ({ ...prev, gridColumns: parseInt(e.target.value) || 1 }))}
+                        className="w-full px-2 py-1.5 border border-zinc-100 rounded text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-bold uppercase text-zinc-400">Grid Rows ({styleConfig.gridRows})</label>
+                      <input 
+                        type="number" min="1" max="20"
+                        value={styleConfig.gridRows}
+                        onChange={(e) => setStyleConfig(prev => ({ ...prev, gridRows: parseInt(e.target.value) || 1 }))}
+                        className="w-full px-2 py-1.5 border border-zinc-100 rounded text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-bold uppercase text-zinc-400">Col Gap ({styleConfig.columnGap}mm)</label>
+                      <input 
+                        type="range" min="0" max="20" step="0.5"
+                        value={styleConfig.columnGap}
+                        onChange={(e) => setStyleConfig(prev => ({ ...prev, columnGap: parseFloat(e.target.value) }))}
+                        className="w-full h-1.5 accent-black"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-bold uppercase text-zinc-400">Row Gap ({styleConfig.rowGap}mm)</label>
+                      <input 
+                        type="range" min="0" max="20" step="0.5"
+                        value={styleConfig.rowGap}
+                        onChange={(e) => setStyleConfig(prev => ({ ...prev, rowGap: parseFloat(e.target.value) }))}
+                        className="w-full h-1.5 accent-black"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-bold uppercase text-zinc-400">Left Side Move ({styleConfig.leftColumnOffset}mm)</label>
+                      <input 
+                        type="range" min="-50" max="50" step="0.5"
+                        value={styleConfig.leftColumnOffset}
+                        onChange={(e) => setStyleConfig(prev => ({ ...prev, leftColumnOffset: parseFloat(e.target.value) }))}
+                        className="w-full h-1.5 accent-black"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-bold uppercase text-zinc-400">Right Side Move ({styleConfig.rightColumnOffset}mm)</label>
+                      <input 
+                        type="range" min="-50" max="50" step="0.5"
+                        value={styleConfig.rightColumnOffset}
+                        onChange={(e) => setStyleConfig(prev => ({ ...prev, rightColumnOffset: parseFloat(e.target.value) }))}
+                        className="w-full h-1.5 accent-black"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-bold uppercase text-zinc-400">Inside Card Padding ({styleConfig.cardPadding}mm)</label>
+                    <input 
+                      type="range" min="0" max="10" step="0.1"
+                      value={styleConfig.cardPadding}
+                      onChange={(e) => setStyleConfig(prev => ({ ...prev, cardPadding: parseFloat(e.target.value) }))}
+                      className="w-full h-1.5 accent-black"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-bold uppercase text-zinc-400">Inside Line Spacing ({styleConfig.lineSpacing}mm)</label>
+                    <input 
+                      type="range" min="0" max="10" step="0.1"
+                      value={styleConfig.lineSpacing}
+                      onChange={(e) => setStyleConfig(prev => ({ ...prev, lineSpacing: parseFloat(e.target.value) }))}
+                      className="w-full h-1.5 accent-black"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-bold uppercase text-zinc-400">Page Outer Margin ({styleConfig.pagePadding}mm)</label>
+                    <input 
+                      type="range" min="0" max="30" step="1"
+                      value={styleConfig.pagePadding}
+                      onChange={(e) => setStyleConfig(prev => ({ ...prev, pagePadding: parseFloat(e.target.value) }))}
+                      className="w-full h-1.5 accent-black"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-bold uppercase text-zinc-400">Force Card Width (mm)</label>
+                      <input 
+                        type="number" min="0"
+                        placeholder="Auto"
+                        value={styleConfig.cardWidth || ''}
+                        onChange={(e) => setStyleConfig(prev => ({ ...prev, cardWidth: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                        className="w-full px-2 py-1.5 border border-zinc-100 rounded text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-bold uppercase text-zinc-400">Force Card Height (mm)</label>
+                      <input 
+                        type="number" min="0"
+                        placeholder="Auto"
+                        value={styleConfig.cardHeight || ''}
+                        onChange={(e) => setStyleConfig(prev => ({ ...prev, cardHeight: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                        className="w-full px-2 py-1.5 border border-zinc-100 rounded text-xs"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

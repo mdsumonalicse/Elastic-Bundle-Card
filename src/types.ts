@@ -28,6 +28,17 @@ export interface FieldStyle {
 export interface LabelStyle {
   fontSize: number;
   contentXOffset: number;
+  gridColumns: number;
+  gridRows: number;
+  cardPadding: number;
+  pagePadding: number;
+  rowGap: number;
+  columnGap: number;
+  lineSpacing: number;
+  leftColumnOffset: number;
+  rightColumnOffset: number;
+  cardHeight?: number;
+  cardWidth?: number;
   fields: {
     [key in keyof ProductionData | 'footer']?: FieldStyle;
   };
@@ -40,6 +51,15 @@ export interface LabelStyle {
 export const defaultLabelStyle: LabelStyle = {
   fontSize: 11,
   contentXOffset: 0,
+  gridColumns: 3,
+  gridRows: 7,
+  cardPadding: 1.5,
+  pagePadding: 5,
+  rowGap: 5,
+  columnGap: 5,
+  lineSpacing: 1.5,
+  leftColumnOffset: 0,
+  rightColumnOffset: 0,
   fields: {
     buyer: { textAlign: 'left', letterSpacing: 0 },
     size: { textAlign: 'left', letterSpacing: 0 },

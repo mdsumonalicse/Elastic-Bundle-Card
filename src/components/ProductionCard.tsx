@@ -5,6 +5,7 @@ interface ProductionCardProps {
   data: ProductionData;
   styleConfig?: LabelStyle;
   className?: string;
+  hOffset?: number;
 }
 
 const AutoShrink: React.FC<{ 
@@ -62,7 +63,7 @@ const AutoShrink: React.FC<{
   );
 };
 
-export const ProductionCard: React.FC<ProductionCardProps> = ({ data, styleConfig, className = '' }) => {
+export const ProductionCard: React.FC<ProductionCardProps> = ({ data, styleConfig, className = '', hOffset = 0 }) => {
   const baseSize = styleConfig?.fontSize ?? 10;
   const xOffset = styleConfig?.contentXOffset ?? 0;
   const fieldStyles = styleConfig?.fields || {};
@@ -103,12 +104,21 @@ export const ProductionCard: React.FC<ProductionCardProps> = ({ data, styleConfi
 
   return (
     <div 
-      className={`relative border-2 border-black bg-white font-sans text-black leading-tight overflow-hidden p-[1.5mm] ${className}`} 
+      className={`relative border-2 border-black bg-white font-sans text-black leading-tight overflow-hidden ${className}`} 
       id="production-card"
+      style={{ 
+        padding: `${styleConfig?.cardPadding ?? 1.5}mm`,
+        height: styleConfig?.cardHeight ? `${styleConfig.cardHeight}mm` : '100%',
+        width: styleConfig?.cardWidth ? `${styleConfig.cardWidth}mm` : '100%',
+        transform: hOffset !== 0 ? `translateX(${hOffset}mm)` : undefined,
+      }}
     >
       <div 
-        className="grid grid-cols-[max-content_min-content_1fr_max-content_min-content_auto] gap-x-1 gap-y-1.5 items-baseline"
-        style={{ transform: `translateX(${xOffset}px)` }}
+        className="grid grid-cols-[max-content_min-content_1fr_max-content_min-content_auto] gap-x-1 items-baseline"
+        style={{ 
+          transform: `translateX(${xOffset}px)`,
+          rowGap: `${styleConfig?.lineSpacing ?? 1.5}mm`
+        }}
       >
         {renderField('buyer')}
         {renderField('size', true)}
