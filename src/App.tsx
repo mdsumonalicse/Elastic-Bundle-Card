@@ -321,6 +321,17 @@ export default function App() {
               [id="production-card"] > div:first-child {
                 row-gap: ${styleConfig.lineSpacing}mm !important;
               }
+
+              .page-number {
+                position: absolute !important;
+                bottom: 5mm !important;
+                left: 0 !important;
+                right: 0 !important;
+                text-align: center !important;
+                font-size: 10px !important;
+                color: #666666 !important;
+                font-family: ui-sans-serif, system-ui, sans-serif !important;
+              }
               
               .font-bold { font-weight: 700 !important; }
               .uppercase { text-transform: uppercase !important; }
@@ -403,6 +414,9 @@ export default function App() {
               />
             );
           })}
+        </div>
+        <div className="page-number">
+          Page {pageIdx + 1} of {pages.length}
         </div>
         {/* html2pdf specific page break marker */}
         {pageIdx < pages.length - 1 && <div className="html2pdf__page-break" style={{ height: '0', pageBreakAfter: 'always' }} />}
@@ -502,6 +516,16 @@ export default function App() {
             break-inside: avoid !important;
             box-sizing: border-box !important;
             border: 2px solid #000000 !important;
+          }
+          .page-number {
+            position: absolute !important;
+            bottom: 5mm !important;
+            left: 0 !important;
+            right: 0 !important;
+            text-align: center !important;
+            font-size: 10px !important;
+            color: #000000 !important;
+            font-weight: bold !important;
           }
         }
       `}</style>
